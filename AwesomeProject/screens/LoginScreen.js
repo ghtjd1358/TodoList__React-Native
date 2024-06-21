@@ -1,10 +1,70 @@
-import { StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native'
-import { useState } from 'react'
+import { Alert, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native'
+import { useEffect, useState } from 'react'
 import ListIcon from '../assets/list.svg'
+import { getAuth, createUserWithEmailAndPassword, signInWithEmailAndPassword, onAuthStateChanged } from 'firebase/auth';
+import Toast from 'react-native-toast-message';
+import { useNavigation } from '@react-navigation/native';
+
 
 export default function LoginScreen() {
     const [email, setEmail] = useState('')
     const [password, setPassword] = useState('');
+    const navigation = useNavigation()
+    const auth = getAuth();
+
+    useEffect(()=>{
+        onAuthStateChanged(auth, user => {
+            console.log('onAuthStateChanged user', user)
+            if(user){
+                navigation.replace("Main")
+            }else{
+                console.log(user)
+            }
+        })
+    },[])
+
+    const handleSignUp = async () =>{
+       try{
+        const user = await createUserWithEmailAndPassword(auth, email, password);
+        console.log(user)
+        Toast.show({
+            type : 'success',
+            text1 : '회원가입 성공',
+            text2 : `${email}으로 가입되었습니다.`
+
+        })
+       }catch(error){
+        console.log(error.message)
+        Alert.alert(
+            "회원가입 도중에 문제가 생겼습니다.",
+            error.message,
+            [{text: '닫기' , onPress : () => console.log('닫기')} ],
+            { cancelable : true }
+        )
+       }
+    }
+
+    const handleLogin = async () =>{
+        try{
+         const userCredential = await signInWithEmailAndPassword(auth, email, password)
+         const user = userCredential.user
+         console.log(userCredential)
+         Toast.show({
+            type : 'success',
+            text1 : '로그인 성공',
+            text2 : `${user.email} 님 반갑습니다.`
+
+        })
+        }catch(error){
+            console.log(error)
+            Alert.alert(
+                "로그인 도중에 문제가 발생했습니다?",
+                error.message,
+                [{text : '닫기', onPress : ()=>console.log('닫기')}],
+                { cancelable : true }
+            )
+        }
+    }
 
   return (
     <View style={styles.container}>   
@@ -27,13 +87,13 @@ export default function LoginScreen() {
         <View style={styles.buttonContainer}>
             <TouchableOpacity
                 style={styles.button}
-                onPress={() => console.log('로그인 버튼 클릭')}
+                onPress={handleLogin}
             >
                 <Text style={styles.buttonText}>로그인</Text>
             </TouchableOpacity>
             <TouchableOpacity
                 style={styles.buttonOutline}
-                onPress={() => console.log('회원가입 버튼 클릭')}
+                onPress={handleSignUp}
             >
                 <Text style={styles.buttonOutlineText}>회원가입</Text>
             </TouchableOpacity>

@@ -1,19 +1,43 @@
-import { FlatList, Platform, SafeAreaView, StyleSheet, Text, View } from 'react-native'
-import React from 'react'
+import { FlatList, Platform, SafeAreaView, StyleSheet, Text, Touchable, TouchableOpacity, View } from 'react-native'
+import React, { useEffect } from 'react'
 import { StatusBar } from 'expo-status-bar'
 import InputForm from '../components/InputForm'
 import TodoItems from '../components/TodoItems'
 import { useSelector } from 'react-redux'
+import { getAuth, signOut } from 'firebase/auth'
+import { useNavigation } from '@react-navigation/native'
+
 
 const MainScreen = () => {
   const todos = useSelector(state => state.todo.todos);
   const todoTasks = todos.filter((item) => item.state === 'todo');
   const completedTasks = todos.filter((item) => item.state === 'done');
+  const auth = getAuth()
+  const navigation = useNavigation()
+
+
+  const handleLogout = async () =>{
+    try{
+      const user = await signOut(auth)
+      navigation.replace('Login')
+      console.log(user)
+    }catch(error){
+      console.log(error)
+    }
+  }
 
   return (
     <SafeAreaView style={styles.container}>
       <StatusBar barStyle={`default`} />
+      <View style={styles.headerContainer}>
       <Text style={styles.pageTitle}>Todo App</Text>
+      <TouchableOpacity
+        style={styles.logOutButton}
+        onPress={handleLogout}
+      >
+        <Text style={styles.logOutText} >로그아웃</Text>
+      </TouchableOpacity>
+      </View>
       <View style={styles.listView}>
         <Text style={styles.listTitle}>할 일!!</Text>
         {todoTasks.length !== 0 ? (
@@ -78,5 +102,24 @@ const styles = StyleSheet.create({
     color: 'grey',
     textAlign: 'center',
     marginTop: 20,
+  },
+  logOutButton : {
+    marginBottom : 25,
+    marginRight : 25 ,
+    justifyContent : 'center',
+    alignItems : 'center',
+    width : 42,
+    height : 42,
+    backgroundColor : 'rgba(0,0,0,0.7)',
+    borderRadius : 4
+  },
+  logOutText : {
+    color : 'white',
+    fontSize : 25 ,
+  },
+  headerContainer : {
+    flexDirection : 'row',
+    alignItems : 'center',
+    justifyContent : 'space-between'
   }
 })
